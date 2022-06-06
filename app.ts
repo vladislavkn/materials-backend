@@ -4,10 +4,12 @@ import path from "path";
 import logger from "morgan";
 import cookieParser from "cookie-parser"
 import config from "./config";
+import connectPostgresqlDataSource from "./data-sources/postgresql";
 
-import indexRouter from "./routes/index";
+import indexRouter from "./routes/auth";
 
 const app = express();
+connectPostgresqlDataSource();
 
 app.use(logger('dev'));
 app.use(express.json());
