@@ -6,9 +6,8 @@ export default class Session {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ManyToOne(() => User, user => user.sessions)
+  @ManyToOne(() => User, user => user.sessions, { cascade: ["remove"], nullable: false })
   user: User;
 
-  @CreateDateColumn()
-  public created_at: Date;
+  public createdAt: Date;
 }

@@ -1,9 +1,10 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import config from "../config";
-import {User} from "../entities/user";
+import config from "./config";
+import User from "./entities/user";
+import Session from "./entities/session";
 
-export default () => new DataSource({
+const Database = new DataSource({
   // @ts-ignore
   type: config.DB_TYPE,
   host: config.DB_HOST,
@@ -13,7 +14,12 @@ export default () => new DataSource({
   database: config.DB_NAME,
   synchronize: true,
   logging: true,
-  entities: [User],
+  entities: [User, Session],
   subscribers: [],
   migrations: [],
-})
+});
+
+export default Database;
+
+export const UserRepo = Database.getRepository(User);
+export const SessionRepo = Database.getRepository(Session);

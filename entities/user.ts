@@ -1,23 +1,32 @@
 import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import Session from "./session";
 
+export enum userRole {
+  READER = "READER",
+  MODERATOR = "MODERATOR",
+  ADMIN = "ADMIN"
+}
+
 @Entity()
 export default class User {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column()
+  @Column({nullable: false})
   name: string
 
-  @Column()
+  @Column({nullable: false})
   email: string
 
-  @Column()
+  @Column({nullable: false})
   passwordHash: string
 
-  @OneToMany(() => Session, session => session.user)
+  @Column({default: userRole.READER, nullable: false})
+  role: userRole
+
+  @OneToMany(() => Session, session => session.user, {nullable: false})
   sessions: Session[];
 
-  @CreateDateColumn()
-  public created_at: Date;
+  @Column({default: new Date(), nullable: false})
+  public createdAt: Date;
 }
