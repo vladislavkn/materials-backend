@@ -4,8 +4,9 @@ import {SessionRepo} from "../database";
 import User from "../entities/user";
 import Session from "../entities/session";
 
-export interface RequestWithUser extends Request {
+export interface RequestWithAuthData extends Request {
   user: User
+  session: Session
 }
 
 export const getAuthSessionFromRequest = async (req: Request): Promise<Session | null> => {
@@ -21,12 +22,15 @@ export const getAuthSessionFromRequest = async (req: Request): Promise<Session |
   return session;
 }
 
-const auth: RequestHandler = async (req, res, next) => {
+const authGuard: RequestHandler = async (req, res, next) => {
   const authSession = await getAuthSessionFromRequest(req);
-  if (!authSession) return next(createHTTPError(401, 'Please login to view this page.'));
-  (req as RequestWithUser).user = authSession.user;
+  if (!authSession) {
+    if(req.cookies.session) res.clearCookie("session");
+    return next(createHTTPError(401, 'Please login to view this page.'));
+  }
+  (req as RequestWithAuthData).user = authSession.user;
+  (req as RequestWithAuthData).session = authSession;
   return next();
 }
 
-
-export default auth;
+export default authGuard;

@@ -1,5 +1,5 @@
 import {Router} from "express";
-import auth, {getAuthSessionFromRequest, RequestWithUser} from "../middleware/auth";
+import authGuard, {getAuthSessionFromRequest, RequestWithAuthData} from "../middleware/authGuard";
 import {SessionRepo, UserRepo} from "../database";
 import createHTTPError from "http-errors";
 import User from "../entities/user";
@@ -66,16 +66,16 @@ router.post('/login', async (req, res, next) => {
   return res.status(200).json({user: userData});
 });
 
-router.post('/logout', auth, async (req, res, next) => {
+router.post('/logout', authGuard, async (req, res, next) => {
   res.clearCookie("session");
-  const authSession = await getAuthSessionFromRequest(req);
-  await SessionRepo.delete(authSession!).catch((e) => next(createHTTPError(500, e.message)));
-  ;
+  const session = (req as RequestWithAuthData).session;
+  await SessionRepo.delete(session).catch((e) => next(createHTTPError(500, e.message)));
+
   return res.status(200).send();
 });
 
-router.get('/me', auth, async (req, res) => {
-  const {passwordHash, createdAt, ...userDate} = (req as RequestWithUser).user;
+router.get('/me', authGuard, async (req, res) => {
+  const {passwordHash, createdAt, ...userDate} = (req as RequestWithAuthData).user;
   return res.status(200).json({user: userDate});
 });
 
