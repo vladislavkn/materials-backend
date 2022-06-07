@@ -1,15 +1,17 @@
 import {Router} from "express";
-import authGuard, {getAuthSessionFromRequest, RequestWithAuthData} from "../middleware/authGuard";
-import {SessionRepo, UserRepo} from "../database";
+import authGuard, {RequestWithAuthData} from "../../middleware/authGuard";
+import {SessionRepo, UserRepo} from "../../database";
 import createHTTPError from "http-errors";
-import User from "../entities/user";
-import config from "../config";
+import User from "../../entities/user";
+import config from "../../config";
 import crypto from "crypto";
-import Session from "../entities/session";
+import Session from "../../entities/session";
+import validateSchema from "../../middleware/validateSchema";
+import {loginRequestSchema, registerRequestSchema} from "./schemes";
 
 const router = Router();
 
-router.post('/register', async (req, res, next) => {
+router.post('/register', authGuard(false), validateSchema(registerRequestSchema), async (req, res, next) => {
   const {name, email, password}: {
     name: string,
     email: string,
@@ -31,14 +33,11 @@ router.post('/register', async (req, res, next) => {
   await UserRepo.save(user).catch((e) => next(createHTTPError(500, e.message)));
 
   return res.status(200).send({
-    message: "User has been registered"
+    ok: true,
   });
 });
 
-router.post('/login', async (req, res, next) => {
-  let authSession = await getAuthSessionFromRequest(req);
-  if (authSession) return next(createHTTPError(400, "User is already logged in."));
-
+router.post('/login', authGuard(false), validateSchema(loginRequestSchema), async (req, res, next) => {
   const {email, password}: {
     email: string,
     password: string,
@@ -63,20 +62,27 @@ router.post('/login', async (req, res, next) => {
 
   const {passwordHash, createdAt, ...userData} = user
 
-  return res.status(200).json({user: userData});
+  return res.status(200).json({
+    ok: true, user: userData
+  });
 });
 
-router.post('/logout', authGuard, async (req, res, next) => {
+router.post('/logout', authGuard(), async (req, res, next) => {
   res.clearCookie("session");
   const session = (req as RequestWithAuthData).session;
   await SessionRepo.delete(session).catch((e) => next(createHTTPError(500, e.message)));
 
-  return res.status(200).send();
+  return res.status(200).json({
+    ok: true
+  });
 });
 
-router.get('/me', authGuard, async (req, res) => {
+router.get('/me', authGuard(), async (req, res) => {
   const {passwordHash, createdAt, ...userDate} = (req as RequestWithAuthData).user;
-  return res.status(200).json({user: userDate});
+  return res.status(200).json({
+    ok: true,
+    user: userDate
+  });
 });
 
 export default router;
