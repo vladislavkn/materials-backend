@@ -29,4 +29,12 @@ export default class User {
 
   @Column({default: new Date(), nullable: false})
   public createdAt: Date;
+
+  get data() {
+    return {
+      email: this.email,
+      name: this.name,
+      role: this.role,
+    }
+  }
 }
