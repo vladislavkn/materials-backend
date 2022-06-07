@@ -49,9 +49,12 @@ router.post('/login', authGuard(false), validateSchema(loginRequestSchema), asyn
   }
 
   try {
-    const session = sessionRepository.create({user});
+    let session = await sessionRepository.findOneBy({user});
+    if(!session) {
+      session = sessionRepository.create({user});
+      await sessionRepository.save(session);
+    }
     res.cookie("session", session.id, {httpOnly: true});
-    await sessionRepository.save(session);
   } catch (e) {
     return next(createHTTPError(500, "Error while saving session on server."))
   }

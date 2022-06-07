@@ -13,13 +13,15 @@ export const getAuthSessionFromRequest = async (req: Request): Promise<Session |
   const sessionCookie: string | null = req.cookies.session;
   if (!sessionCookie) return null
 
-  const session = await sessionRepository.findOne({
-    where: {id: Number(sessionCookie)},
-    relations: ["user"]
-  });
-  if (!session) return null;
-
-  return session;
+  try {
+    const session = await sessionRepository.findOne({
+      where: {id: Number(sessionCookie)},
+      relations: ["user"]
+    });
+    return session ? session : null;
+  } catch(e) {
+    return null;
+  }
 }
 
 const authGuard = (passAuthenticated=true): RequestHandler => async (req, res, next) => {
