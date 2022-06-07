@@ -1,6 +1,6 @@
 import {Request, RequestHandler} from "express";
 import createHTTPError from "http-errors";
-import {SessionRepo} from "../database";
+import {sessionRepository} from "../database";
 import User from "../entities/user";
 import Session from "../entities/session";
 
@@ -13,7 +13,7 @@ export const getAuthSessionFromRequest = async (req: Request): Promise<Session |
   const sessionCookie: string | null = req.cookies.session;
   if (!sessionCookie) return null
 
-  const session = await SessionRepo.findOne({
+  const session = await sessionRepository.findOne({
     where: {id: Number(sessionCookie)},
     relations: ["user"]
   });

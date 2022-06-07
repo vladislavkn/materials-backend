@@ -1,6 +1,6 @@
 import {Router} from "express";
 import authGuard, {RequestWithAuthData} from "../../middleware/authGuard";
-import {SessionRepo, UserRepo} from "../../database";
+import {sessionRepository, userRepository} from "../../database";
 import createHTTPError from "http-errors";
 import config from "../../config";
 import crypto from "crypto";
@@ -11,18 +11,18 @@ const router = Router();
 
 router.post('/register', authGuard(false), validateSchema(registerRequestSchema), async (req, res, next) => {
   const {name, email, password} = req.body;
-  const userCandidate = await UserRepo.findOneBy({name});
+  const userCandidate = await userRepository.findOneBy({name});
   if (userCandidate) {
     return next(createHTTPError(400, "User with the same email already exists."));
   }
 
   try {
-    const user = UserRepo.create({
+    const user = userRepository.create({
       name,
       email,
       passwordHash: crypto.pbkdf2Sync(password, config.PASSWORD_SALT, 1000, 64, `sha512`).toString(`hex`)
     });
-    await UserRepo.save(user);
+    await userRepository.save(user);
   } catch (e) {
     return next(createHTTPError(500, "Error while saving user on server."))
   }
@@ -35,7 +35,7 @@ router.post('/register', authGuard(false), validateSchema(registerRequestSchema)
 router.post('/login', authGuard(false), validateSchema(loginRequestSchema), async (req, res, next) => {
   const {email, password} = req.body;
 
-  const user = await UserRepo.findOneBy({email});
+  const user = await userRepository.findOneBy({email});
   if (!user) {
     return next(createHTTPError(400, "Email or password is incorrect."));
   }
@@ -49,9 +49,9 @@ router.post('/login', authGuard(false), validateSchema(loginRequestSchema), asyn
   }
 
   try {
-    const session = SessionRepo.create({user});
+    const session = sessionRepository.create({user});
     res.cookie("session", session.id, {httpOnly: true});
-    await SessionRepo.save(session);
+    await sessionRepository.save(session);
   } catch (e) {
     return next(createHTTPError(500, "Error while saving session on server."))
   }
@@ -65,7 +65,7 @@ router.post('/logout', authGuard(), async (req, res, next) => {
   res.clearCookie("session");
   const session = (req as RequestWithAuthData).session;
   try {
-    await SessionRepo.delete(session)
+    await sessionRepository.delete(session)
   } catch (e) {
     next(createHTTPError(500, (e as Error).message));
   }

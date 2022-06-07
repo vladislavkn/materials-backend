@@ -21,5 +21,5 @@ const Database = new DataSource({
 
 export default Database;
 
-export const UserRepo = Database.getRepository(User);
-export const SessionRepo = Database.getRepository(Session);
+export const userRepository = Database.getRepository(User);
+export const sessionRepository = Database.getRepository(Session);
