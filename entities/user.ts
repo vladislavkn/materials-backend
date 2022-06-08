@@ -1,5 +1,7 @@
 import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import Session from "./session";
+import crypto from "crypto";
+import config from "../config";
 
 export enum userRole {
   READER = "READER",
@@ -36,5 +38,18 @@ export default class User {
       name: this.name,
       role: this.role,
     }
+  }
+
+  static async hashPassword(password: string): Promise<string> {
+    return new Promise<Buffer>((resolve, reject) =>
+      crypto.pbkdf2(password, config.PASSWORD_SALT, 1000, 64, `sha512`, (err, res) => {
+        if(err) reject(err);
+        else resolve(res);
+      })
+    ).then<string>((res) => res.toString(`hex`));
+  }
+
+  async validatePassword(passwordToCheck: string): Promise<boolean> {
+    return this.passwordHash === await User.hashPassword(passwordToCheck);
   }
 }

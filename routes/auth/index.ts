@@ -6,6 +6,7 @@ import config from "../../config";
 import crypto from "crypto";
 import validateSchema from "../../middleware/validateSchema";
 import {loginRequestSchema, registerRequestSchema} from "./schemes";
+import User from "../../entities/user";
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.post('/register', authGuard(false), validateSchema(registerRequestSchema)
     const user = userRepository.create({
       name,
       email,
-      passwordHash: crypto.pbkdf2Sync(password, config.PASSWORD_SALT, 1000, 64, `sha512`).toString(`hex`)
+      passwordHash: await User.hashPassword(password)
     });
     await userRepository.save(user);
   } catch (e) {
@@ -40,16 +41,20 @@ router.post('/login', authGuard(false), validateSchema(loginRequestSchema), asyn
     return next(createHTTPError(400, "Email or password is incorrect."));
   }
 
-  const attemptPasswordHash =
-    crypto.pbkdf2Sync(password, config.PASSWORD_SALT, 1000, 64, `sha512`)
-    .toString(`hex`);
-
-  if (attemptPasswordHash != user.passwordHash) {
+  const isPasswordValid = await user.validatePassword(password);
+  if (!isPasswordValid) {
     return next(createHTTPError(400, "Email or password is incorrect."));
   }
 
   try {
-    let session = await sessionRepository.findOneBy({user});
+    let session = await sessionRepository.findOne({
+      relations: ["user"],
+      where: {
+        user: {
+          id: user.id
+        }
+      }
+    });
     if(!session) {
       session = sessionRepository.create({user});
       await sessionRepository.save(session);
@@ -68,7 +73,7 @@ router.post('/logout', authGuard(), async (req, res, next) => {
   res.clearCookie("session");
   const session = (req as RequestWithAuthData).session;
   try {
-    await sessionRepository.delete(session)
+    await sessionRepository.delete({ id: session.id })
   } catch (e) {
     next(createHTTPError(500, (e as Error).message));
   }
