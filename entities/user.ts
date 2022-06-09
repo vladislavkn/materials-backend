@@ -17,7 +17,7 @@ export default class User {
   @Column({nullable: false})
   name: string
 
-  @Column({nullable: false})
+  @Column({nullable: false, unique: true})
   email: string
 
   @Column({nullable: false})
@@ -34,6 +34,7 @@ export default class User {
 
   get data() {
     return {
+      id: this.id,
       email: this.email,
       name: this.name,
       role: this.role,
