@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser"
 import config from "./config";
 
 import authRouter from "./routes/auth";
+import usersRouter from "./routes/users";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/auth', authRouter);
+app.use('/users', usersRouter);
 
 app.use((req, res, next) =>
   next(createHTTPError(404))
