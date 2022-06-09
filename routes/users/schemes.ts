@@ -1,6 +1,12 @@
 import * as yup from "yup";
 import {userRole} from "../../entities/user";
 
+export const getUsersRequestScheme = yup.object({
+  query: yup.object({
+    id: yup.string()
+  })
+})
+
 export const patchUserRequestScheme = yup.object({
   body: yup.object({
     id: yup.string().required(),
