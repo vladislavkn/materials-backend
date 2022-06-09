@@ -1,16 +1,14 @@
 import {Router} from "express";
-import authGuard, {RequestWithAuthData} from "../../middleware/authGuard";
+import {authGuard, noAuthGuard, RequestWithAuthData} from "../../middleware/authGuard";
 import {sessionRepository, userRepository} from "../../database";
 import createHTTPError from "http-errors";
-import config from "../../config";
-import crypto from "crypto";
 import validateSchema from "../../middleware/validateSchema";
 import {loginRequestSchema, registerRequestSchema} from "./schemes";
 import User from "../../entities/user";
 
 const router = Router();
 
-router.post('/register', authGuard(false), validateSchema(registerRequestSchema), async (req, res, next) => {
+router.post('/register', noAuthGuard, validateSchema(registerRequestSchema), async (req, res, next) => {
   const {name, email, password} = req.body;
   const userCandidate = await userRepository.findOneBy({name});
   if (userCandidate) {
@@ -33,7 +31,7 @@ router.post('/register', authGuard(false), validateSchema(registerRequestSchema)
   });
 });
 
-router.post('/login', authGuard(false), validateSchema(loginRequestSchema), async (req, res, next) => {
+router.post('/login', noAuthGuard, validateSchema(loginRequestSchema), async (req, res, next) => {
   const {email, password} = req.body;
 
   const user = await userRepository.findOneBy({email});
@@ -69,7 +67,7 @@ router.post('/login', authGuard(false), validateSchema(loginRequestSchema), asyn
   });
 });
 
-router.post('/logout', authGuard(), async (req, res, next) => {
+router.post('/logout', authGuard, async (req, res, next) => {
   res.clearCookie("session");
   const session = (req as RequestWithAuthData).session;
   try {
@@ -83,7 +81,7 @@ router.post('/logout', authGuard(), async (req, res, next) => {
   });
 });
 
-router.get('/me', authGuard(), async (req, res) => {
+router.get('/me', authGuard, async (req, res) => {
   return res.status(200).json({
     ok: true,
     user: (req as RequestWithAuthData).user.data

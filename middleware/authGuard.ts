@@ -24,19 +24,26 @@ export const getAuthSessionFromRequest = async (req: Request): Promise<Session |
   }
 }
 
-const authGuard = (passAuthenticated=true): RequestHandler => async (req, res, next) => {
+export const authGuard: RequestHandler = async (req, res, next) => {
   const authSession = await getAuthSessionFromRequest(req);
 
   if (!authSession) {
-    if(!passAuthenticated) return next();
     if(req.cookies.session) res.clearCookie("session");
     return next(createHTTPError(401, 'Resource is available only for authenticated users.'));
   }
 
-  if(!passAuthenticated) return next(createHTTPError(400, 'Resource is available only for not authenticated users.'));
   (req as RequestWithAuthData).user = authSession.user;
   (req as RequestWithAuthData).session = authSession;
+
   return next();
 }
 
-export default authGuard;
+export const noAuthGuard: RequestHandler = async (req, res, next) => {
+  const authSession = await getAuthSessionFromRequest(req);
+
+  if(authSession) {
+    return next(createHTTPError(400, 'Resource is available only for not authenticated users.'));
+  }
+
+  return next();
+}
