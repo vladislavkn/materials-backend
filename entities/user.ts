@@ -1,7 +1,8 @@
-import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import Session from "./session";
 import crypto from "crypto";
 import config from "../config";
+import Article from "./article";
 
 export enum userRole {
   READER = "READER",
@@ -31,6 +32,9 @@ export default class User {
 
   @OneToMany(() => Session, session => session.user, {nullable: false})
   sessions: Session[];
+
+  @OneToMany(() => Article, article => article.author, {nullable: false})
+  articles: Article[];
 
   @Column({default: new Date(), nullable: false})
   public createdAt: Date;

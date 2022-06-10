@@ -3,8 +3,9 @@ import { DataSource } from "typeorm";
 import config from "./config";
 import User from "./entities/user";
 import Session from "./entities/session";
+import Article from "./entities/article";
 
-const Database = new DataSource({
+const database = new DataSource({
   // @ts-ignore
   type: config.DB_TYPE,
   host: config.DB_HOST,
@@ -14,12 +15,13 @@ const Database = new DataSource({
   database: config.DB_NAME,
   synchronize: true,
   logging: true,
-  entities: [User, Session],
+  entities: [User, Session, Article],
   subscribers: [],
   migrations: [],
 });
 
-export default Database;
+export default database;
 
-export const userRepository = Database.getRepository(User);
-export const sessionRepository = Database.getRepository(Session);
+export const userRepository = database.getRepository(User);
+export const sessionRepository = database.getRepository(Session);
+export const articleRepository = database.getRepository(Article);
