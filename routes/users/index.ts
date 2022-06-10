@@ -5,8 +5,14 @@ import User, {userRole} from "../../entities/user";
 import {userRepository} from "../../database";
 import createHTTPError from "http-errors";
 import validateSchema from "../../middleware/validateSchema";
-import {createUserRequestSchema, getUsersRequestScheme, patchUserRequestScheme} from "./schemes";
+import {
+  createUserRequestScheme,
+  deleteUserRequestScheme,
+  getUsersRequestScheme,
+  patchUserRequestScheme
+} from "./schemes";
 import {DeepPartial} from "typeorm";
+import generateSalt from "../../utils/generateSalt";
 
 const router = Router();
 
@@ -36,7 +42,7 @@ router.patch('', authGuard, validateSchema(patchUserRequestScheme), async (req, 
   let {role} = req.body;
 
   const user = (req as RequestWithAuthData).user
-  const userUpdatesHimself = Number(id) == user.id;
+  const userUpdatesHimself = id == user.id;
   const userIsAdmin = user.role == userRole.ADMIN;
 
   if (!userUpdatesHimself && !userIsAdmin) {
@@ -57,7 +63,7 @@ router.patch('', authGuard, validateSchema(patchUserRequestScheme), async (req, 
     const userWithUpdatedFields = userRepository.create(fieldsToUpdate);
     const updateUserResult = await userRepository.createQueryBuilder("user")
     .update(userWithUpdatedFields)
-    .where("id = :id", {id: Number(id)})
+    .where("id = :id", {id})
     .returning('*')
     .updateEntity(true)
     .execute();
@@ -74,15 +80,17 @@ router.patch('', authGuard, validateSchema(patchUserRequestScheme), async (req, 
   }
 });
 
-router.post('', authGuard, roleGuard(userRole.ADMIN), validateSchema(createUserRequestSchema), async (req, res, next) => {
+router.post('', authGuard, roleGuard(userRole.ADMIN), validateSchema(createUserRequestScheme), async (req, res, next) => {
   const {name, email, role, password} = req.body;
 
   try {
+    const salt = generateSalt();
     const user = userRepository.create({
       name,
       email,
       role,
-      passwordHash: await User.hashPassword(password)
+      salt,
+      passwordHash: await User.hashPassword(password, salt)
     });
     await userRepository.save(user);
     return res.status(200).json({
@@ -91,6 +99,26 @@ router.post('', authGuard, roleGuard(userRole.ADMIN), validateSchema(createUserR
     });
   } catch (e) {
     return next(createHTTPError(500, "Error while saving a user to the database."));
+  }
+});
+
+router.delete('', authGuard, validateSchema(deleteUserRequestScheme), async (req, res, next) => {
+  const {id} = req.body;
+  const user = (req as RequestWithAuthData).user
+  const userUpdatesHimself = id == user.id;
+  const userIsAdmin = user.role == userRole.ADMIN;
+
+  if (!userUpdatesHimself && !userIsAdmin) {
+    return next(createHTTPError(403, "This resource is not available for your role or your are not the the user you want to delete."));
+  }
+
+  try {
+    await userRepository.delete(id);
+    return res.status(200).json({
+      ok: true
+    });
+  } catch(e) {
+    return next(createHTTPError(500, "Error while deleting a user from the database."));
   }
 });
 

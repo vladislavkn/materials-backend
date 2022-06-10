@@ -23,6 +23,9 @@ export default class User {
   @Column({nullable: false})
   passwordHash: string
 
+  @Column({ nullable: false})
+  public salt: string;
+
   @Column({default: userRole.READER, nullable: false})
   role: userRole
 
@@ -41,7 +44,7 @@ export default class User {
     }
   }
 
-  static async hashPassword(password: string): Promise<string> {
+  static async hashPassword(password: string, salt: string): Promise<string> {
     return new Promise<Buffer>((resolve, reject) =>
       crypto.pbkdf2(password, config.PASSWORD_SALT, 1000, 64, `sha512`, (err, res) => {
         if(err) reject(err);
@@ -51,6 +54,6 @@ export default class User {
   }
 
   async validatePassword(passwordToCheck: string): Promise<boolean> {
-    return this.passwordHash === await User.hashPassword(passwordToCheck);
+    return this.passwordHash === await User.hashPassword(passwordToCheck, this.salt);
   }
 }

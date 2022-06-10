@@ -5,6 +5,7 @@ import createHTTPError from "http-errors";
 import validateSchema from "../../middleware/validateSchema";
 import {loginRequestSchema, registerRequestSchema} from "./schemes";
 import User from "../../entities/user";
+import generateSalt from "../../utils/generateSalt";
 
 const router = Router();
 
@@ -16,10 +17,12 @@ router.post('/register', noAuthGuard, validateSchema(registerRequestSchema), asy
   }
 
   try {
+    const salt = generateSalt();
     const user = userRepository.create({
       name,
       email,
-      passwordHash: await User.hashPassword(password)
+      salt,
+      passwordHash: await User.hashPassword(password, salt)
     });
     await userRepository.save(user);
   } catch (e) {
