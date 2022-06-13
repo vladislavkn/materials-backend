@@ -1,4 +1,4 @@
-import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import User from "./user";
 
 export enum articleState {
@@ -15,11 +15,11 @@ export default class Article {
   @Column({nullable: false, unique: true})
   title: string
 
-  @Column()
+  @Column({nullable: true})
   thumbnailText: string
 
   @Column({nullable: false})
-  content: string;
+  text: string;
 
   @Column({nullable: false, default: articleState.DRAFT})
   state: articleState;
@@ -27,6 +27,6 @@ export default class Article {
   @ManyToOne(() => User, user => user.articles, {cascade: ["remove"], nullable: false})
   author: User;
 
-  @Column({default: new Date(), nullable: false})
+  @CreateDateColumn()
   createdAt: Date;
 }
