@@ -7,4 +7,5 @@ export default {
   DB_HOST : process.env.DB_HOST || "localhost",
   DB_TYPE:  process.env.DB_TYPE || "postgres",
   PASSWORD_SALT: process.env.PASSWORD_SALT || "salt",
+  IS_PRODUCTION: process.env.NODE_ENV == "production",
 }
