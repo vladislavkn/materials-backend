@@ -21,11 +21,27 @@ export type getArticlesRequestQuery = {
   limit: string,
 }
 
-export const createArticleQuery = yup.object({
+export const createArticleRequestScheme = yup.object({
   body: yup.object({
     title: yup.string().required(),
     thumbnailText: yup.string(),
     text: yup.string().required(),
     state: yup.string().oneOf(Object.keys(articleState)).default(articleState.DRAFT),
+  })
+});
+
+export const patchArticleRequestScheme = yup.object({
+  body: yup.object({
+    id: yup.number().required(),
+    title: yup.string(),
+    thumbnailText: yup.string(),
+    text: yup.string(),
+    state: yup.string().oneOf(Object.keys(articleState)),
+  })
+});
+
+export const deleteArticleRequestScheme = yup.object({
+  body: yup.object({
+    id: yup.number().required(),
   })
 });

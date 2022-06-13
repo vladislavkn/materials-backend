@@ -1,25 +1,32 @@
 import {Router} from "express";
 import {authGuard, RequestWithAuthData} from "../../middleware/authGuard";
 import validateSchema from "../../middleware/validateSchema";
-import {createArticleQuery, getArticlesRequestQuery, getArticlesRequestScheme} from "./schemes";
+import {
+  createArticleRequestScheme, deleteArticleRequestScheme,
+  getArticlesRequestQuery,
+  getArticlesRequestScheme,
+  patchArticleRequestScheme
+} from "./schemes";
 import filterObject from "../../utils/filterObject";
-import {articleRepository} from "../../database";
-import createHTTPError from "http-errors";
+import {articleRepository, userRepository} from "../../database";
+import createHTTPError, {HttpError} from "http-errors";
 import {userRole} from "../../entities/user";
 import Article from "../../entities/article";
-import {DeepPartial, TypeORMError} from "typeorm";
+import {DeepPartial} from "typeorm";
+import canUserModifyTheArticle from "./canUserModifyTheArticle";
 
 const router = Router();
 
-// Get posts
+// Get articles
 router.get('', authGuard, validateSchema(getArticlesRequestScheme), async (req, res, next) => {
   const {title, authorId, text, state, skip, limit} = req.query;
   const searchOptions = filterObject<getArticlesRequestQuery>({title, authorId, text, state, skip, limit});
-  console.log({searchOptions});
+
   try {
     const articlesQueryBuilder = articleRepository.createQueryBuilder("a")
     .where({state: searchOptions.state})
-    .select(["a.title", "a.thumbnailText", "a.text"])
+    .leftJoinAndSelect("a.author", "author")
+    .select(["a.title", "a.thumbnailText", "a.text", "a.id", "author.id", "author.name"])
     .offset(Number(searchOptions.skip))
     .limit(Number(searchOptions.limit))
 
@@ -46,8 +53,8 @@ router.get('', authGuard, validateSchema(getArticlesRequestScheme), async (req, 
   }
 });
 
-// Create new post
-router.post('', authGuard, validateSchema(createArticleQuery), async (req, res, next) => {
+// Create new article
+router.post('', authGuard, validateSchema(createArticleRequestScheme), async (req, res, next) => {
   const {title, text, thumbnailText} = req.body;
   const user = (req as RequestWithAuthData).user;
   const newArticleFields: DeepPartial<Article> = {
@@ -79,12 +86,67 @@ router.post('', authGuard, validateSchema(createArticleQuery), async (req, res, 
   }
 });
 
-// Update a post
-router.patch('', authGuard, (req, res, next) => {
+// Update an article
+router.patch('', authGuard, validateSchema(patchArticleRequestScheme), async (req, res, next) => {
+  const {title, text, thumbnailText, state, id} = req.body;
+  const user = (req as RequestWithAuthData).user;
+  const userIsModeratorOrAdmin = [userRole.ADMIN, userRole.MODERATOR].includes(user.role);
+
+  // Check if user can update the article
+  const mayBeError = await canUserModifyTheArticle(user, id);
+  if(mayBeError instanceof HttpError) {
+    return next(mayBeError);
+  }
+
+  const fieldsToUpdate = filterObject<DeepPartial<Article>>({
+    title, text, thumbnailText, state
+  });
+
+  if(!userIsModeratorOrAdmin) {
+    delete fieldsToUpdate.state;
+  }
+
+  try {
+    const articleWithUpdatedFields = articleRepository.create(fieldsToUpdate);
+    const updateArticleResult = await articleRepository.createQueryBuilder("article")
+    .update(articleWithUpdatedFields)
+    .where("id = :id", {id})
+    .returning('*')
+    .updateEntity(true)
+    .execute();
+
+
+    if (!updateArticleResult.raw[0]) throw new Error();
+
+    const article = articleRepository.create(updateArticleResult.raw[0] as DeepPartial<Article>);
+    return res.status(200).json({
+      ok: true,
+      article,
+    });
+  } catch (e) {
+    return next(createHTTPError(500, "Error while saving the article to the database."));
+  }
 });
 
-// Delete a post
-router.delete('', authGuard, (req, res, next) => {
+// Delete an article
+router.delete('', authGuard, validateSchema(deleteArticleRequestScheme), async (req, res, next) => {
+  const {id} = req.body;
+  const user = (req as RequestWithAuthData).user;
+
+  // Check if user can update the article
+  const mayBeError = await canUserModifyTheArticle(user, id);
+  if(mayBeError instanceof HttpError) {
+    return next(mayBeError);
+  }
+
+  try {
+    await articleRepository.delete(id);
+    return res.status(200).json({
+      ok: true
+    });
+  } catch(e) {
+    return next(createHTTPError(500, "Error while deleting the article from the database."));
+  }
 });
 
 export default router;
