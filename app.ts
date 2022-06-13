@@ -7,6 +7,7 @@ import config from "./config";
 
 import authRouter from "./routes/auth";
 import usersRouter from "./routes/users";
+import articlesRouter from "./routes/article";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
+app.use('/articles', articlesRouter);
 
 app.use((req, res, next) =>
   next(createHTTPError(404))
