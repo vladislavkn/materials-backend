@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "npx tsc",
-    "start": "npm run build && node dist/bootstrap.js",
-    "dev": "npm run build && concurrently \"npx tsc --watch\" \"nodemon -q dist/bootstrap.js\""
+    "start": "node dist/bootstrap.js",
+    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/bootstrap.js\""
   },
   "dependencies": {
     "@types/cookie-parser": "^1.4.3",
