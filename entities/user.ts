@@ -1,4 +1,4 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import Session from "./session";
 import crypto from "crypto";
 import config from "../config";
@@ -36,8 +36,8 @@ export default class User {
   @OneToMany(() => Article, article => article.author, {nullable: false})
   articles: Article[];
 
-  @Column({default: new Date(), nullable: false})
-  public createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
   get data() {
     return {
