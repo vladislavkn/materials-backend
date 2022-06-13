@@ -13,6 +13,7 @@ import {
 } from "./schemes";
 import {DeepPartial} from "typeorm";
 import generateSalt from "../../utils/generateSalt";
+import filterObject from "../../utils/filterObject";
 
 const router = Router();
 
@@ -53,11 +54,7 @@ router.patch('', authGuard, validateSchema(patchUserRequestScheme), async (req, 
     return next(createHTTPError(403, "Role updating is not available for your role."));
   }
 
-  const fieldsToUpdate = Object.entries({name, email, role})
-  .reduce<Partial<User>>((acc, [key, value]) => ({
-    ...acc,
-    ...(value && {[key]: value})
-  }), {});
+  const fieldsToUpdate = filterObject<Partial<User>>({name, email, role});
 
   try {
     const userWithUpdatedFields = userRepository.create(fieldsToUpdate);
