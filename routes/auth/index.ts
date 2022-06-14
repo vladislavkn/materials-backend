@@ -11,10 +11,6 @@ const router = Router();
 
 router.post('/register', noAuthGuard, validateSchema(registerRequestSchema), async (req, res, next) => {
   const {name, email, password} = req.body;
-  const userCandidate = await userRepository.findOneBy({name});
-  if (userCandidate) {
-    return next(createHTTPError(400, "User with the same email already exists."));
-  }
 
   try {
     const salt = generateSalt();
@@ -26,6 +22,10 @@ router.post('/register', noAuthGuard, validateSchema(registerRequestSchema), asy
     });
     await userRepository.save(user);
   } catch (e) {
+    // @ts-ignore
+    if (e.code === "23505") {
+      return next(createHTTPError(400, "User with the same email already exists."));
+    }
     return next(createHTTPError(500, "Error while saving user on server."))
   }
 
