@@ -2,16 +2,17 @@ import {Router} from "express";
 import {authGuard, RequestWithAuthData} from "../../middleware/authGuard";
 import validateSchema from "../../middleware/validateSchema";
 import {
-  createArticleRequestScheme, deleteArticleRequestScheme,
+  createArticleRequestScheme,
+  deleteArticleRequestScheme,
   getArticlesRequestQuery,
   getArticlesRequestScheme,
   patchArticleRequestScheme
 } from "./schemes";
 import filterObject from "../../utils/filterObject";
-import {articleRepository, userRepository} from "../../database";
+import {articleRepository} from "../../database";
 import createHTTPError, {HttpError} from "http-errors";
 import {userRole} from "../../entities/user";
-import Article from "../../entities/article";
+import Article, {articleState} from "../../entities/article";
 import {DeepPartial} from "typeorm";
 import canUserModifyTheArticle from "./canUserModifyTheArticle";
 
@@ -105,7 +106,8 @@ router.patch('', authGuard, validateSchema(patchArticleRequestScheme), async (re
     title, text, thumbnailText, state
   });
 
-  if(!userIsModeratorOrAdmin) {
+  // Only Admin or moderator can publish articles
+  if(!userIsModeratorOrAdmin && fieldsToUpdate.state == articleState.PUBLISHED) {
     delete fieldsToUpdate.state;
   }
 
@@ -117,7 +119,6 @@ router.patch('', authGuard, validateSchema(patchArticleRequestScheme), async (re
     .returning('*')
     .updateEntity(true)
     .execute();
-
 
     if (!updateArticleResult.raw[0]) throw new Error();
 
