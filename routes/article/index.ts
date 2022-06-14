@@ -24,22 +24,25 @@ router.get('', authGuard, validateSchema(getArticlesRequestScheme), async (req, 
 
   try {
     const articlesQueryBuilder = articleRepository.createQueryBuilder("a")
-    .where({state: searchOptions.state})
     .leftJoinAndSelect("a.author", "author")
     .select(["a.title", "a.thumbnailText", "a.text", "a.id", "author.id", "author.name"])
     .offset(Number(searchOptions.skip))
     .limit(Number(searchOptions.limit))
 
+    if(searchOptions.state) {
+      articlesQueryBuilder.andWhere({state: searchOptions.state})
+    }
+
     if (searchOptions.authorId) {
-      articlesQueryBuilder.where({author: {id: Number(searchOptions.authorId)}});
+      articlesQueryBuilder.andWhere({author: {id: Number(searchOptions.authorId)}});
     }
 
     if (searchOptions.title) {
-      articlesQueryBuilder.where("a.title like :title", {title: `%${searchOptions.title}%`});
+      articlesQueryBuilder.andWhere("a.title like :title", {title: `%${searchOptions.title}%`});
     }
 
     if (searchOptions.text) {
-      articlesQueryBuilder.where("a.text like :text", {text: `%${searchOptions.text}%`});
+      articlesQueryBuilder.andWhere("a.text like :text", {text: `%${searchOptions.text}%`});
     }
 
     const articles = await articlesQueryBuilder.getMany();

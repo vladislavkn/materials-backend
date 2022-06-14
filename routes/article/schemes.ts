@@ -6,9 +6,9 @@ export const getArticlesRequestScheme = yup.object({
     title: yup.string(),
     authorId: yup.string(),
     text: yup.string(),
-    state: yup.string().oneOf(Object.keys(articleState)).default(articleState.PUBLISHED),
-    skip: yup.string().required().default("0"),
-    limit: yup.string().required().default("100"),
+    state: yup.string().oneOf(Object.keys(articleState)),
+    skip: yup.string().default("0"),
+    limit: yup.string().default("100"),
   })
 })
 
