@@ -6,6 +6,7 @@ export const getArticlesRequestScheme = yup.object({
     search: yup.string(),
     authorId: yup.string(),
     state: yup.string().oneOf(Object.keys(articleState)),
+    articleId: yup.string(),
     skip: yup.string().default("0"),
     limit: yup.string().default("100"),
   }),
@@ -14,6 +15,7 @@ export const getArticlesRequestScheme = yup.object({
 export type getArticlesRequestQuery = {
   search?: string;
   authorId?: string;
+  articleId?: string;
   state?: articleState;
   skip: string;
   limit: string;

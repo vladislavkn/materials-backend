@@ -23,10 +23,11 @@ router.get(
   "",
   validateSchema(getArticlesRequestScheme),
   async (req, res, next) => {
-    const { authorId, search, state, skip, limit } = req.query;
+    const { authorId, articleId, search, state, skip, limit } = req.query;
     const searchOptions = filterObject<getArticlesRequestQuery>({
       authorId,
       search,
+      articleId,
       state,
       skip,
       limit,
@@ -54,6 +55,12 @@ router.get(
       if (searchOptions.authorId) {
         articlesQueryBuilder.andWhere({
           author: { id: Number(searchOptions.authorId) },
+        });
+      }
+
+      if (searchOptions.articleId) {
+        articlesQueryBuilder.andWhere({
+          id: Number(searchOptions.articleId),
         });
       }
 
