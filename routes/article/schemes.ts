@@ -3,9 +3,8 @@ import { articleState } from "../../entities/article";
 
 export const getArticlesRequestScheme = yup.object({
   query: yup.object({
-    title: yup.string(),
+    search: yup.string(),
     authorId: yup.string(),
-    text: yup.string(),
     state: yup.string().oneOf(Object.keys(articleState)),
     skip: yup.string().default("0"),
     limit: yup.string().default("100"),
@@ -13,9 +12,8 @@ export const getArticlesRequestScheme = yup.object({
 });
 
 export type getArticlesRequestQuery = {
-  title?: string;
+  search?: string;
   authorId?: string;
-  text?: string;
   state?: articleState;
   skip: string;
   limit: string;

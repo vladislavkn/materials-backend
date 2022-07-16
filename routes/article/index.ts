@@ -13,7 +13,7 @@ import { articleRepository } from "../../database";
 import createHTTPError, { HttpError } from "http-errors";
 import { userRole } from "../../entities/user";
 import Article, { articleState } from "../../entities/article";
-import { DeepPartial } from "typeorm";
+import { Brackets, DeepPartial } from "typeorm";
 import canUserModifyTheArticle from "./canUserModifyTheArticle";
 
 const router = Router();
@@ -23,11 +23,10 @@ router.get(
   "",
   validateSchema(getArticlesRequestScheme),
   async (req, res, next) => {
-    const { title, authorId, text, state, skip, limit } = req.query;
+    const { authorId, search, state, skip, limit } = req.query;
     const searchOptions = filterObject<getArticlesRequestQuery>({
-      title,
       authorId,
-      text,
+      search,
       state,
       skip,
       limit,
@@ -58,16 +57,16 @@ router.get(
         });
       }
 
-      if (searchOptions.title) {
-        articlesQueryBuilder.andWhere("a.title like :title", {
-          title: `%${searchOptions.title}%`,
-        });
-      }
-
-      if (searchOptions.text) {
-        articlesQueryBuilder.andWhere("a.text like :text", {
-          text: `%${searchOptions.text}%`,
-        });
+      if (searchOptions.search) {
+        articlesQueryBuilder.andWhere(
+          new Brackets((qb) => {
+            qb.where("a.title like :search", {
+              search: `%${searchOptions.search}%`,
+            }).orWhere("a.text like :search", {
+              search: `%${searchOptions.search}%`,
+            });
+          })
+        );
       }
 
       const articles = await articlesQueryBuilder.getMany();
