@@ -1,30 +1,39 @@
-import {Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import User from "./user";
 
 export enum articleState {
   DRAFT = "DRAFT",
   PROPOSAL = "PROPOSAL",
-  PUBLISHED = "PUBLISHED"
+  PUBLISHED = "PUBLISHED",
 }
 
 @Entity()
 export default class Article {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
-  @Column({nullable: false, unique: true})
-  title: string
+  @Column({ nullable: false, unique: true })
+  title: string;
 
-  @Column({nullable: true})
-  thumbnailText: string
+  @Column({ nullable: true })
+  thumbnailText: string;
 
-  @Column({nullable: false})
+  @Column({ nullable: false })
   text: string;
 
-  @Column({nullable: false, default: articleState.DRAFT})
+  @Column({ nullable: false, default: articleState.DRAFT })
   state: articleState;
 
-  @ManyToOne(() => User, user => user.articles, {cascade: ["remove"], nullable: false})
+  @ManyToOne(() => User, (user) => user.articles, {
+    cascade: ["remove"],
+    nullable: false,
+  })
   author: User;
 
   @CreateDateColumn()
