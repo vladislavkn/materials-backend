@@ -37,14 +37,7 @@ router.get(
       const articlesQueryBuilder = articleRepository
         .createQueryBuilder("a")
         .leftJoinAndSelect("a.author", "author")
-        .select([
-          "a.title",
-          "a.thumbnailText",
-          "a.text",
-          "a.id",
-          "author.id",
-          "author.name",
-        ])
+        .select(["a.title", "a.text", "a.id", "author.id", "author.name"])
         .offset(Number(searchOptions.skip))
         .limit(Number(searchOptions.limit));
 
@@ -96,12 +89,11 @@ router.post(
   authGuard,
   validateSchema(createArticleRequestScheme),
   async (req, res, next) => {
-    const { title, text, thumbnailText } = req.body;
+    const { title, text } = req.body;
     const user = (req as RequestWithAuthData).user;
     const newArticleFields: DeepPartial<Article> = {
       title,
       text,
-      thumbnailText,
       author: user,
     };
 
@@ -143,7 +135,7 @@ router.patch(
   authGuard,
   validateSchema(patchArticleRequestScheme),
   async (req, res, next) => {
-    const { title, text, thumbnailText, state, id } = req.body;
+    const { title, text, state, id } = req.body;
     const user = (req as RequestWithAuthData).user;
     const userIsModeratorOrAdmin = [
       userRole.ADMIN,
@@ -159,7 +151,7 @@ router.patch(
     const fieldsToUpdate = filterObject<DeepPartial<Article>>({
       title,
       text,
-      thumbnailText,
+
       state,
     });
 

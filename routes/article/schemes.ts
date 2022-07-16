@@ -24,7 +24,6 @@ export type getArticlesRequestQuery = {
 export const createArticleRequestScheme = yup.object({
   body: yup.object({
     title: yup.string().required(),
-    thumbnailText: yup.string(),
     text: yup.string().required(),
     state: yup
       .string()
@@ -37,7 +36,6 @@ export const patchArticleRequestScheme = yup.object({
   body: yup.object({
     id: yup.number().required(),
     title: yup.string(),
-    thumbnailText: yup.string(),
     text: yup.string(),
     state: yup.string().oneOf(Object.keys(articleState)),
   }),

@@ -21,9 +21,6 @@ export default class Article {
   @Column({ nullable: false, unique: true })
   title: string;
 
-  @Column({ nullable: true })
-  thumbnailText: string;
-
   @Column({ nullable: false })
   text: string;
 
