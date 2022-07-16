@@ -4,25 +4,29 @@
 
 ## Start on local machine
 
+Clone repository
+
 ```bash
-# Clone repository
 git clone https://github.com/vladislavkn/materials-backend.git
 cd materials-backend
 ```
 
+Install dependencies & compile source code
+
 ```bash
-# Install dependencies & compile source code
 npm i
 npm run build
 ```
 
+Build docker container with database
+
 ```bash
-# Build docker container with database
 docker-compose up --build db
 ```
 
+Run the server
+
 ```bash
-# Run the server
 npm run start
 ```
 
