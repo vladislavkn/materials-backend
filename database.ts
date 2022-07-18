@@ -14,7 +14,7 @@ const database = new DataSource({
   password: config.DB_PASSWORD,
   database: config.DB_NAME,
   synchronize: !config.IS_PRODUCTION,
-  logging: !config.IS_PRODUCTION,
+  logging: false,
   entities: [User, Session, Article],
   subscribers: [],
   migrations: [],

@@ -1,6 +1,6 @@
 export default {
   ORIGIN: process.env.ORIGIN || "http://localhost:3000",
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT || 4000,
   DB_PORT: Number(process.env.DB_PORT) || 5432,
   DB_USERNAME: process.env.DB_USERNAME || "root",
   DB_PASSWORD: process.env.DB_PASSWORD || "root",
